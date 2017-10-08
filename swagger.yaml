@@ -1,0 +1,54 @@
+swagger: "2.0"
+info:
+  description: "Api to recognize face of av actress in japan."
+  version: "1.0.0"
+  title: "erMoney API"
+  contact:
+    email: "noda.sin@gmaill.com"
+  license:
+    name: "MIT"
+host: "ermoney.com"
+basePath: "/v1"
+schemes:
+- "https"
+paths:
+  /face:recognition:
+    post:
+      tags:
+      - "face"
+      summary: "api to recognize face of av actress in japan"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Image capture of screen that user want to know name of peopoe in video."
+        required: true
+        schema:
+          $ref: "#/definitions/CaptureImage"
+      responses:
+        200:
+          description: "Success to recognize"
+          schema:
+            $ref: "#/definitions/FaceRecognitionResponse"
+        404:
+          description: "Not Found"
+        405:
+          description: "Invalid input"
+definitions:
+  CaptureImage:
+    type: "object"
+    properties:
+      image:
+        type: "string"
+        format: "binary"
+  FaceRecognitionResponse:
+    type: "object"
+    properties:
+      face:
+        type: "object"
+        properties:
+          name:
+            type: "string"
