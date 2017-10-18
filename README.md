@@ -2,10 +2,17 @@ erMoney API
 ===========
 Api to recognize face of av actress in japan.
 
+
+## Geting Started
+
+```
+$ data=$(base64 image.jpg) && curl -H 'Content-Type:application/json' -d "{\"image\":\"$data\"}" https://actress-search.herokuapp.com/face:recognition
+```
+
 **Version:** 1.0.0
 
-**Contact information:**  
-noda.sin@gmaill.com  
+**Contact information:**
+noda.sin@gmaill.com
 
 **License:** MIT
 
@@ -31,13 +38,13 @@ noda.sin@gmaill.com
 ### Models
 ---
 
-<a name="captureImage"></a>**CaptureImage**  
+<a name="captureImage"></a>**CaptureImage**
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
 | image | binary |  | No |
 
-<a name="faceRecognitionResponse"></a>**FaceRecognitionResponse**  
+<a name="faceRecognitionResponse"></a>**FaceRecognitionResponse**
 
 | Name | Type | Description | Required |
 | ---- | ---- | ----------- | -------- |
