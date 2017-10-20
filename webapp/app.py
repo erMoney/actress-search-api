@@ -26,20 +26,20 @@ def resize(image):
 
 def detect_faces(img):
     gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    face_rect_list = face_detect_cascade.detectMultiScale(gray_img, scaleFactor=1.07, minNeighbors=9, minSize=(10, 10))
+    face_rect_list = FACE_DETECT_CASCADE.detectMultiScale(gray_img, scaleFactor=1.03, minNeighbors=5, minSize=(10, 10))
     face_img_list = []
     for i, face_rect in enumerate(face_rect_list):
         face_img = resize(img[face_rect[1]:face_rect[1] + face_rect[3], face_rect[0]:face_rect[0] + face_rect[2]])
-        # if has_eyes(face_img):
-        #     face_img_list.append(face_img)
-        face_img_list.append(face_img)
+        if has_two_eyes(face_img):
+            face_img_list.append(face_img)
+        # face_img_list.append(face_img)
     return face_img_list
 
 
-def has_eyes(img):
-    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    eyes = eye_detect_cascade.detectMultiScale(gray_img, scaleFactor=1.03, minNeighbors=5, minSize=(10, 10))
-    return len(eyes) > 0
+def has_two_eyes(image):
+    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    eyes = EYES_DETECT_CASCADE.detectMultiScale(image_gray, scaleFactor=1.03, minNeighbors=5, minSize=(10, 10))
+    return len(eyes) == 2
 
 
 def recognize_face_name(img):
@@ -51,7 +51,7 @@ def recognize_face_name(img):
     # Load Model
     model = load_model('model.h5')
     idx = np.argmax(model.predict(x, batch_size=32)[0], axis=-1)
-    return actress_list[idx]
+    return ACTRESS_LIST[idx]
 
 
 def read_base64_img(base64_img):
