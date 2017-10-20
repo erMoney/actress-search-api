@@ -9,15 +9,27 @@ from keras.models import load_model
 app = Flask(__name__)
 
 # Load Cascade
-face_detect_cascade = cv2.CascadeClassifier('haarcascades/haarcascade_frontalface_default.xml')
-eye_detect_cascade = cv2.CascadeClassifier('haarcascades/haarcascade_eye.xml')
+FACE_DETECT_CASCADE = cv2.CascadeClassifier('haarcascades/haarcascade_frontalface_default.xml')
+EYES_DETECT_CASCADE = cv2.CascadeClassifier('haarcascades/haarcascade_eye.xml')
 
 # Load Actress List
-df = pd.read_csv('actress_list.txt')
-actress_list = [name for i, name in enumerate(df.name)]
+ACTRESS_LIST = [name for i, name in enumerate(pd.read_csv('actress_list.txt').name)]
+
 
 class NoFaceDetectError(Exception):
-    pass
+    status_code = 404
+
+    def __init__(self, message, status_code=None, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        return rv
 
 
 def resize(image):
@@ -30,9 +42,9 @@ def detect_faces(img):
     face_img_list = []
     for i, face_rect in enumerate(face_rect_list):
         face_img = resize(img[face_rect[1]:face_rect[1] + face_rect[3], face_rect[0]:face_rect[0] + face_rect[2]])
-        if has_two_eyes(face_img):
-            face_img_list.append(face_img)
-        # face_img_list.append(face_img)
+        # if has_two_eyes(face_img):
+        #     face_img_list.append(face_img)
+        face_img_list.append(face_img)
     return face_img_list
 
 
@@ -45,7 +57,7 @@ def has_two_eyes(image):
 def recognize_face_name(img):
     face_img_list = detect_faces(img)
     if len(face_img_list) == 0:
-        raise NoFaceDetectError()
+        raise NoFaceDetectError('Face is not detected.', status_code=404)
     face_img = face_img_list[0]
     x = np.array([face_img]).astype('float') / 256
     # Load Model
@@ -58,16 +70,22 @@ def read_base64_img(base64_img):
     img = base64.b64decode(base64_img)
     return cv2.imdecode(np.fromstring(img, np.uint8), cv2.COLOR_RGB2BGR)
 
+
+@app.errorhandler(NoFaceDetectError)
+def handle_invalid_usage(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
+
 @app.route('/face:recognition', methods=['POST'])
 def recognize():
     data = json.loads(request.data)
     img = read_base64_img(data['image'])
-    try:
-        name = recognize_face_name(img)
-    except NoFaceDetectError:
-        return Response(status=404)
+    name = recognize_face_name(img)
     return jsonify({'face': {'name': name}})
 
 
 if __name__ == '__main__':
+    app.debug=True
     app.run(host='0.0.0.0')
