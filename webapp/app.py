@@ -62,8 +62,13 @@ def recognize_face_name(img):
     x = np.array([face_img]).astype('float') / 256
     # Load Model
     model = load_model('model.h5')
-    idx = np.argmax(model.predict(x, batch_size=32)[0], axis=-1)
-    return ACTRESS_LIST[idx]
+    predict = model.predict(x, batch_size=32)[0]
+    candidates = []
+    for idx in np.argsort(predict):
+        score = predict[idx]
+        candidates.append({'name': ACTRESS_LIST[idx], 'score': score})
+    print('candidates', candidates)
+    return candidates[0]['name'], candidates
 
 
 def read_base64_img(base64_img):
@@ -82,7 +87,7 @@ def handle_invalid_usage(error):
 def recognize():
     data = json.loads(request.data)
     img = read_base64_img(data['image'])
-    name = recognize_face_name(img)
+    name, candidates = recognize_face_name(img)
     return jsonify({'face': {'name': name}})
 
 
