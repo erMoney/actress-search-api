@@ -5,6 +5,7 @@ import pandas as pd
 from cv2 import cv2
 from flask import Flask, jsonify, json, render_template, request, Response
 from keras.models import load_model
+import tensorflow as tf
 
 app = Flask(__name__)
 
@@ -15,7 +16,9 @@ EYES_DETECT_CASCADE = cv2.CascadeClassifier('haarcascades/haarcascade_eye.xml')
 # Load Actress List
 ACTRESS_LIST = [name for i, name in enumerate(pd.read_csv('actress_list.txt').name)]
 
-
+model = load_model('model.h5')
+# https://github.com/fchollet/keras/issues/2397
+graph = tf.get_default_graph()
 
 class NoFaceDetectError(Exception):
     status_code = 404
@@ -56,19 +59,22 @@ def has_two_eyes(image):
 
 
 def recognize_face_name(img):
-    face_img_list = detect_faces(img)
-    if len(face_img_list) == 0:
-        raise NoFaceDetectError('Face is not detected.', status_code=404)
-    face_img = face_img_list[0]
-    x = np.array([face_img]).astype('float') / 256
-    # Load Model
-    model = load_model('model.h5')
-    predict = model.predict(x, batch_size=32)[0]
-    candidates = []
-    for idx in np.argsort(predict):
-        score = predict[idx].item()
-        candidates.append({'name': ACTRESS_LIST[idx], 'score': score})
-    return candidates[0]['name'], candidates
+    # 別スレッドでmodelをロードした場合
+    # https://github.com/fchollet/keras/issues/2397
+    global graph
+    with graph.as_default():
+        face_img_list = detect_faces(img)
+        if len(face_img_list) == 0:
+            raise NoFaceDetectError('Face is not detected.', status_code=404)
+        face_img = face_img_list[0]
+        x = np.array([face_img]).astype('float') / 256
+        # Load Model
+        predict = model.predict(x, batch_size=32)[0]
+        candidates = []
+        for idx in np.argsort(predict)[::-1]:
+            score = predict[idx].item()
+            candidates.append({'name': ACTRESS_LIST[idx], 'score': score})
+        return candidates[0]['name'], candidates
 
 
 def read_base64_img(base64_img):
@@ -89,7 +95,6 @@ def recognize():
     img = read_base64_img(data['image'])
     name, candidates = recognize_face_name(img)
     body = {'face': {'name': name},'candidates':candidates}
-    print('response', body)
     return jsonify(body)
 
 
