@@ -16,6 +16,7 @@ EYES_DETECT_CASCADE = cv2.CascadeClassifier('haarcascades/haarcascade_eye.xml')
 ACTRESS_LIST = [name for i, name in enumerate(pd.read_csv('actress_list.txt').name)]
 
 
+
 class NoFaceDetectError(Exception):
     status_code = 404
 
@@ -62,8 +63,12 @@ def recognize_face_name(img):
     x = np.array([face_img]).astype('float') / 256
     # Load Model
     model = load_model('model.h5')
-    idx = np.argmax(model.predict(x, batch_size=32)[0], axis=-1)
-    return ACTRESS_LIST[idx]
+    predict = model.predict(x, batch_size=32)[0]
+    candidates = []
+    for idx in np.argsort(predict):
+        score = predict[idx].item()
+        candidates.append({'name': ACTRESS_LIST[idx], 'score': score})
+    return candidates[0]['name'], candidates
 
 
 def read_base64_img(base64_img):
@@ -82,8 +87,10 @@ def handle_invalid_usage(error):
 def recognize():
     data = json.loads(request.data)
     img = read_base64_img(data['image'])
-    name = recognize_face_name(img)
-    return jsonify({'face': {'name': name}})
+    name, candidates = recognize_face_name(img)
+    body = {'face': {'name': name},'candidates':candidates}
+    print('response', body)
+    return jsonify(body)
 
 
 if __name__ == '__main__':
