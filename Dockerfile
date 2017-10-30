@@ -17,7 +17,7 @@ RUN pip3 install --upgrade pip && \
     pip3 install -r /tmp/requirements.txt
 
 RUN git clone https://github.com/cmusatyalab/openface openface && \
-    cd openface && python setup.py install
+    cd openface && python3 setup.py install
 
 
 ADD ./webapp /opt/webapp/
