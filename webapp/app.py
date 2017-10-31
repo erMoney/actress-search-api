@@ -42,11 +42,11 @@ def recognize_face_name(img):
     # https://github.com/fchollet/keras/issues/2397
     global graph
     with graph.as_default():
-        face_img_list = detect_faces(img)
-        if len(face_img_list) == 0:
+        face_list = detect_faces(img)
+        if len(face_list) == 0:
             raise NoFaceDetectError('Face is not detected.', status_code=404)
-        face_img = face_img_list[0]
-        x = np.array([face_img]).astype('float') / 256
+        face = face_list[0]
+        x = np.array([face.data()]).astype('float') / 256
         # Load Model
         predict = model.predict(x)[0]
         candidates = []
