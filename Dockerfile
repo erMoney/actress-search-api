@@ -19,6 +19,7 @@ RUN pip3 install --upgrade pip && \
 RUN git clone https://github.com/cmusatyalab/openface openface && \
     cd openface && python3 setup.py install
 
+RUN pip3 install boto3
 
 ADD ./webapp /opt/webapp/
 WORKDIR /opt/webapp

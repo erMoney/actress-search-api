@@ -9,6 +9,7 @@ import tensorflow as tf
 import os
 
 from lib.face_detect import detect_faces
+from lib.s3 import upload_image_to_s3
 
 app = Flask(__name__)
 
@@ -46,6 +47,7 @@ def recognize_face_name(img):
         if len(face_list) == 0:
             raise NoFaceDetectError('Face is not detected.', status_code=404)
         face = face_list[0]
+
         x = np.array([face.data()]).astype('float') / 256
         # Load Model
         predict = model.predict(x)[0]
@@ -53,6 +55,10 @@ def recognize_face_name(img):
         for idx in np.argsort(predict)[::-1]:
             score = predict[idx].item()
             candidates.append({'name': ACTRESS_LIST[idx], 'score': score})
+
+        # upload request image to s3
+        upload_image_to_s3(face.data())
+
         return candidates[0]['name'], candidates
 
 
@@ -72,8 +78,11 @@ def handle_invalid_usage(error):
 def recognize():
     data = json.loads(request.data)
     img = read_base64_img(data['image'])
+
+    # recognize face
     name, candidates = recognize_face_name(img)
     body = {'face': {'name': name},'candidates':candidates}
+
     return jsonify(body)
 
 
