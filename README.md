@@ -1,6 +1,6 @@
-erMoney API
+Actress Search API
 ===========
-Api to recognize face of av actress in japan.
+Api to recognize face of sexy actress in japan.
 
 
 ## Geting Started
@@ -19,7 +19,7 @@ noda.sin@gmaill.com
 ### /face:recognition
 ---
 ##### ***POST***
-**Summary:** api to recognize face of av actress in japan
+**Summary:** api to recognize face of sexy actress in japan
 
 **Parameters**
 
