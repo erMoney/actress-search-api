@@ -4,6 +4,7 @@ import cv2
 import dlib
 import os
 
+import numpy as np
 import imutils
 import openface
 
@@ -18,6 +19,9 @@ EYES_DETECT_CASCADE = cv2.CascadeClassifier(os.path.join(DIRECTORY, '../models/h
 PREDICTOR_MODEL     = os.path.join(DIRECTORY, '../models/shape_predictor_68_face_landmarks.dat')
 DLIB_FACE_DETECTOR  = dlib.get_frontal_face_detector()
 DLIB_FACE_PRODICTOR = dlib.shape_predictor(PREDICTOR_MODEL)
+
+RESNET_MODEL        = os.path.join(DIRECTORY, '../models/dlib_face_recognition_resnet_model_v1.dat')
+FACE_REC_MODEL      = dlib.face_recognition_model_v1(RESNET_MODEL)
 
 class Face:
     def __init__(self, cvImg):
@@ -90,3 +94,12 @@ def detect_faces_and_save(filename, dir, module='dlib'):
     for face in faces:
         face.write(os.path.join(dir, str(uuid.uuid4()) + ".jpg"))
     return len(faces)
+
+
+def extract_face_embedding(img):
+    det = dlib.rectangle(0, 0, 64, 64)
+    shape = DLIB_FACE_PRODICTOR(img, det)
+    face_embedding = FACE_REC_MODEL.compute_face_descriptor(img, shape)
+    face_embedding = [x for x in face_embedding]
+    face_embedding = np.array(face_embedding, dtype="float32")[np.newaxis, :]
+    return face_embedding
